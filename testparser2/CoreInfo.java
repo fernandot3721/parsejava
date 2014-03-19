@@ -4,6 +4,7 @@
 package testparser2;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.util.HashSet;
 
@@ -47,6 +48,7 @@ public class CoreInfo {
 			throw new MyException(TAG + "Given path: " + path + "contains no files");
 		}
 		
+		// For directoris, search recursively
 		for (int i=0; i<files.length; i++) {
 			if (files[i].isDirectory()) {
 				this.getFiles(files[i].getAbsolutePath());
@@ -61,18 +63,27 @@ public class CoreInfo {
 //			this.getFiles("J:\\model");
 			this.getFiles("G:\\svn\\ucm\\9.7.0");
 			System.out.println(mTargetFiles.toString());
+			System.out.println(mTargetFiles.size());
 		} catch (MyException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
-	public class JavatFilter implements FilenameFilter {
+	public class JavatFilter implements FileFilter {
 		 
 		private final String FILETER= ".java";
  
 		public boolean accept(File dir, String name) {
 			return (name.endsWith(FILETER));
+		}
+
+		@Override
+		public boolean accept(File file) {
+			if (file.isDirectory()) {
+				return true;
+			}
+			return (file.getName().endsWith(FILETER));
 		}
 	}
 }
