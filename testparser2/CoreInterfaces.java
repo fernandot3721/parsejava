@@ -1,0 +1,22 @@
+/**
+ * 
+ */
+package testparser2;
+
+/**
+ * @author tangjp
+ *
+ */
+public class CoreInterfaces {
+
+	private final String TAG = "TJPLOG: CoreInterfaces";
+	private String mName;
+	private ClassInfo mBelongClass;
+
+	public CoreInterfaces(String mName, ClassInfo mBelongClass) {
+		super();
+		this.mName = mName;
+		this.mBelongClass = mBelongClass;
+	}
+
+}
