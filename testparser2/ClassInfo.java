@@ -3,7 +3,6 @@
  */
 package testparser2;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 
 /**

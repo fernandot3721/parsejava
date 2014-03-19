@@ -17,7 +17,9 @@ public class Testoutput {
 		// TODO Auto-generated method stub
 
 		//new MethodPrinter().printMethod();
-		new CoreInfo().test();
+		//GetJavaFiles.test();
+		//new CoreInfo().testGetFiles();
+		new CoreInfo().parseFile();
 	}
 
 }
