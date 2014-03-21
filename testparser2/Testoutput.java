@@ -3,6 +3,10 @@
  */
 package testparser2;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -27,10 +31,17 @@ public class Testoutput {
 		//new MethodPrinter().printMethod();
 		//GetJavaFiles.test();
 //		new CoreInfo().testGetFiles();
-		new CoreInfo().parseFile("glGetTransformFeedbackVarying.java");
-//		new CoreInfo().parseFile("G:\\svn\\ucm\\9.7.0\\core");
+//		new CoreInfo().parseFile("glGetTransformFeedbackVarying.java");
+		//new CoreInfo().parseFile("G:\\svn\\ucm\\9.7.0\\core");
 //		new ClassParser().testParseCoreFile("SettingFlags.java");
-
+//
+//		PrintWriter pr = new PrintWriter("print.txt");
+//		pr.println("shit");
+//		pr.println("shiiiit");
+//		pr.close();
+		
+		new ClassParser().parseShellFile("G:\\svn\\ucm\\9.7.0\\BrowserShell");
+		
     	Date end = cal.getTime();
     	System.out.println( sdf.format(start) );
     	System.out.println( sdf.format(end) );

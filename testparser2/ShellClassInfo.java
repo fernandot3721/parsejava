@@ -12,12 +12,18 @@ import java.util.HashSet;
 public class ShellClassInfo extends ClassInfo {
 
 	private final String TAG = "TJPLOG: ShellClassInfo";
-	private HashSet<ClassInfo> mImportList;
-	private HashSet<CoreInterfaces> mCalledMethods;
+	private HashSet<String> mImportList;
+	private HashSet<String> mCalledMethods;
 
-	public ShellClassInfo(String mPackage, String mClassName,
-			HashSet<String> mMethods) {
-		super(mPackage, mClassName, mMethods);
-		// TODO Auto-generated constructor stub
+	// These members links to core after parse
+	private HashSet<ClassInfo> mImportListCore;
+	private HashSet<CoreInterfaces> mCalledMethodsCore;
+
+	public ShellClassInfo(String packageName, String className,
+			HashSet<String> methods, HashSet<String> calledMethods,
+			HashSet<String> importList) {
+		super(packageName, className, methods);
+		this.mImportList = importList;
+		this.mCalledMethods = calledMethods;
 	}
 }
