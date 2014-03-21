@@ -10,6 +10,7 @@ package testparser2;
 public class CoreInterfaces {
 
 	private final String TAG = "TJPLOG: CoreInterfaces";
+
 	private String mName;
 	private ClassInfo mBelongClass;
 
@@ -19,4 +20,11 @@ public class CoreInterfaces {
 		this.mBelongClass = mBelongClass;
 	}
 
+	public String getName() {
+		return mName;
+	}
+	
+	public ClassInfo getBelongClass() {
+		return mBelongClass;
+	}
 }

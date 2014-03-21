@@ -30,20 +30,43 @@ public class CoreInfo {
 		try {
 			getter.getFiles(path);
 		} catch (MyException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
-	
-	public void parseFile() {
+	public void parseFile(String path) {
+		this.getFiles(path);
 		ClassParser parser = new ClassParser();
-//		parser.parseCoreFile("WebView.java");
-		parser.testParseCoreFile("WebView.java");
+		ClassInfo tmpClass = null;
+		CoreInterfaces tmpInter = null;
+		HashSet<String> tmpInterList = null;
+		for (String file : mTargetFiles) {
+			
+			try {
+				tmpClass = parser.parseCoreFile(file);
+				mClasses.add(tmpClass);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 		
+		for (ClassInfo coreClass : mClasses) {
+			tmpInterList = coreClass.getMethods();
+			for (String method : tmpInterList) {
+				tmpInter = new CoreInterfaces(method, coreClass);
+				mInterfaces.add(tmpInter);
+			}
+		}
+		
+		String msg = null;
+		for (CoreInterfaces method : mInterfaces) {
+			msg = "Method: " + method.getName() + " Class: " + method.getBelongClass().getClassFullName();
+			System.out.println(msg);
+		}
+		System.out.println("total: " + mInterfaces.size());
 	}
 	
-	
+//================================================================================	
 	// test code
 	public void testGetFiles() {
 		this.getFiles("G:\\svn\\ucm\\9.7.0\\core");

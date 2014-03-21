@@ -25,6 +25,7 @@ import japa.parser.ast.visitor.VoidVisitorAdapter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -34,31 +35,61 @@ import java.util.List;
  *
  */
 public class ClassParser {
-
-	/**
-	 * 
-	 */
-	public ClassParser() {
-		// TODO Auto-generated constructor stub
+	private final String TAG = "TJPLOG: ClassInfo";
+	
+	// TODO parse shell class
+	public ShellClassInfo parseShellFile(String fineName) {
+		ShellClassInfo shellClass = null;
+		
+    	//String importPacks = cu.getImports().toString();
+		
+		
+		return shellClass;
 	}
 
-    public ClassInfo parseCoreFile(String fileName) {
+    public ClassInfo parseCoreFile(String fileName) throws Exception {
+    	ClassInfo coreClass = null;
     	CompilationUnit cu = null;
+    	
+    	// Three element to build up a core class info
+    	String packageName = null;
+    	AString className = new AString();
+    	HashSet<String> methods = new HashSet<>();
+    	
     	try {
     		cu = getCompilcationUnit(fileName);
-    	} catch (Exception e) {
-    		// TODO Auto-generated catch block
-    		e.printStackTrace();
-    	}
+			// Get Packages
+    		if (null != cu.getPackage()) {
+    			packageName = cu.getPackage().getName().toString();
+    		} else {
+    			packageName = "UNDEFINED";
+    		}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     	
-    	String className = new String();
+    	// Get Class Name
     	new GetNameParser().visit(cu, className);
-    	String packageName = cu.getPackage().getName().toString();
-    	//String importPacks = cu.getImports().toString();
     	
-    	return null;
+    	// Get Methods
+    	new GetMethodParser().visit(cu, methods);
+    	
+    	coreClass = new ClassInfo(packageName, className.str, methods);
+    	
+    	return coreClass;
     }
     	
+    
+    /**
+     * @author tangjp
+     *
+     * I don't know why, but we need a wrapper here to get the same string back
+     */
+    private class AString {
+    	public String str = null;
+    }
+
 	/**
 	 * Get Complication Unit from file
 	 * @param fileName
@@ -71,7 +102,7 @@ public class ClassParser {
         CompilationUnit cu = null;
         try {
             // parse the file
-            cu = JavaParser.parse(in);
+            cu = JavaParser.parse(in, "UTF-8");
         } catch (Exception e) {
         	e.printStackTrace();
         } finally {
@@ -80,36 +111,46 @@ public class ClassParser {
         return cu;
 	}
 	
-	 
-    private static class GetNameParser extends VoidVisitorAdapter<String> {
-    	public void visit(ClassOrInterfaceDeclaration n, String name) {
-            name = n.getName();
+    private static class GetNameParser extends VoidVisitorAdapter<AString> {
+    	@Override
+    	public void visit(ClassOrInterfaceDeclaration n, AString name) {
+            name.str = n.getName();
     	}
     }
     
-    private static class GetMethodParser extends VoidVisitorAdapter<String> {
-
+    private static class GetMethodParser extends VoidVisitorAdapter<HashSet<String>> {
         @Override
-        public void visit(MethodDeclaration n, String method) {
-            // here you can access the attributes of the method.
-            // this method will be called for all methods in this 
-            // CompilationUnit, including inner class methods
-            //System.out.println(n.getName());
-        	n.getName();
+        public void visit(MethodDeclaration n, HashSet<String> methods) {
+        	methods.add(n.getName());
         }
     }
 	
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+//================================================================================    
     /**
      * Simple visitor implementation for visiting MethodDeclaration nodes. 
      */
-    private static class MethodVisitor extends VoidVisitorAdapter {
+    private static class MethodVisitor extends VoidVisitorAdapter<Integer> {
+    	private static int cout = 0;
 
         @Override
-        public void visit(MethodDeclaration n, Object arg) {
+        public void visit(MethodDeclaration n, Integer c) {
             // here you can access the attributes of the method.
             // this method will be called for all methods in this 
             // CompilationUnit, including inner class methods
-            //System.out.println(n.getName());
+            System.out.println(n.getBeginLine() + ": " + n.getName());
+            cout++;
+            System.out.println("total count: " + cout);
         	n.getName();
         }
     }
@@ -153,20 +194,15 @@ public class ClassParser {
     	String packageName = cu.getPackage().getName().toString();
     	String importPacks = cu.getImports().toString();
     	
-        if (cu.getTypes() != null) {
-            for (TypeDeclaration typeDeclaration : cu.getTypes()) {
-                System.out.println(typeDeclaration);
-            }
-        }
     	
-    	int c =1;
-    	new MethodVisitor().visit(cu, null);
+    	int c =0;
+    	new MethodVisitor().visit(cu, c);
     	new ClassOrInterfaceVistitor().visit(cu, null);
-    	new ConstructorVistitor().visit(cu, null);
-    	new EmptyMemberVistitor().visit(cu, null);
-    	new FieldVistitor().visit(cu, null);
+//    	new ConstructorVistitor().visit(cu, null);
+//    	new EmptyMemberVistitor().visit(cu, null);
+//    	new FieldVistitor().visit(cu, null);
     	return;
     	
     }
-    
+//================================================================================    
 }
