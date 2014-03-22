@@ -4,6 +4,7 @@
 package testparser2;
 
 import japa.parser.JavaParser;
+import japa.parser.ParseException;
 import japa.parser.ast.CompilationUnit;
 import japa.parser.ast.ImportDeclaration;
 import japa.parser.ast.PackageDeclaration;
@@ -25,6 +26,7 @@ import japa.parser.ast.visitor.VoidVisitorAdapter;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -36,10 +38,16 @@ import java.util.List;
  *
  */
 public class ClassParser {
-	private final String TAG = "TJPLOG: ClassInfo";
+	private final String TAG = "TJPLOG: ClassParser";
 	
-	// TODO parse shell class
-	public ShellClassInfo parseShellFile(String fileName) {
+	/**
+	 * Get shell class info from a java file
+	 * @param fileName file to parse
+	 * @return A shell class object
+	 * @throws MyException
+	 * @throws IOException
+	 */
+	public ShellClassInfo parseShellFile(String fileName) throws MyException, IOException {
 		ShellClassInfo shellClass = null;
     	CompilationUnit cu = null;
     	
@@ -49,11 +57,15 @@ public class ClassParser {
     	HashSet<String> calledMethods = new HashSet<>();
     	HashSet<String> importList = new HashSet<>();
 
-    	try {
-    		cu = getCompilcationUnit(fileName);
-    	} catch (Exception e) {
-    		// TODO Auto-generated catch block
-    		e.printStackTrace();
+    	cu = getCompilcationUnit(fileName);
+    	
+    	// Get Class Name
+    	new GetNameParser().visit(cu, className);
+
+    	// CHECK VALID POINT
+    	if (null == className.str) {
+    		//System.out.println(TAG + " class name null! check " + fileName);
+    		throw new MyException(TAG + "parse file: " + fileName + " class Name null!");
     	}
 
     	// Get Packages
@@ -63,25 +75,30 @@ public class ClassParser {
     		packageName = "UNDEFINED";
     	}
 
-    	// Get Class Name
-    	new GetNameParser().visit(cu, className);
-
     	// Get import list
     	List<ImportDeclaration> imports =  cu.getImports();
-    	for (ImportDeclaration importDec : imports) {
-    		importList.add(importDec.getName().toString());
+    	if (null != imports) {
+    		for (ImportDeclaration importDec : imports) {
+    			importList.add(importDec.getName().toString());
+    		}
     	}
 
     	// Get called Methods
     	cu.accept(new GetCalledMethodParser(), calledMethods);
     	
-    	shellClass = new ShellClassInfo(packageName, className.str, null, importList, calledMethods);
+    	shellClass = new ShellClassInfo(packageName, className.str, null, calledMethods, importList);
 		
 		return shellClass;
 	}
 
-    public ClassInfo parseCoreFile(String fileName) throws Exception {
-    	ClassInfo coreClass = null;
+    /**
+     * Get core class info from a core file
+     * @param fileName file to be parse
+     * @return A core class object
+     * @throws IOException
+     * @throws MyException
+     */
+    public ClassInfo parseCoreFile(String fileName) throws IOException, MyException {
     	CompilationUnit cu = null;
     	
     	// Three element to build up a core class info
@@ -89,28 +106,23 @@ public class ClassParser {
     	AString className = new AString();
     	HashSet<String> methods = new HashSet<>();
     	
-    	try {
-    		cu = getCompilcationUnit(fileName);
-			// Get Packages
-    		if (null != cu.getPackage()) {
-    			packageName = cu.getPackage().getName().toString();
-    		} else {
-    			packageName = "UNDEFINED";
-    		}
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+    	cu = getCompilcationUnit(fileName);
     	
     	// Get Class Name
     	new GetNameParser().visit(cu, className);
+
+    	// Get Packages
+    	if (null != cu.getPackage()) {
+    		packageName = cu.getPackage().getName().toString();
+    	} else {
+    		packageName = "UNDEFINED";
+    	}
     	
     	// Get Methods
     	new GetMethodParser().visit(cu, methods);
     	
-    	coreClass = new ClassInfo(packageName, className.str, methods);
-    	
-    	return coreClass;
+    	// make core class
+    	return new ClassInfo(packageName, className.str, methods);
     }
     	
     
@@ -127,17 +139,18 @@ public class ClassParser {
 	 * Get Complication Unit from file
 	 * @param fileName
 	 * @return Complication Unit
-	 * @throws Exception
+	 * @throws IOException 
+	 * @throws MyException 
 	 */
-	private CompilationUnit getCompilcationUnit(String fileName) throws Exception {
+	private CompilationUnit getCompilcationUnit(String fileName) throws IOException, MyException  {
 
 		FileInputStream in = new FileInputStream(fileName);
         CompilationUnit cu = null;
         try {
             // parse the file
             cu = JavaParser.parse(in, "UTF-8");
-        } catch (Exception e) {
-        	e.printStackTrace();
+        } catch (ParseException e) {
+        	throw new MyException(TAG + "Parse file " + fileName + " file do not fit JAVA syntax");
         } finally {
             in.close();
         }
@@ -154,7 +167,9 @@ public class ClassParser {
     private static class GetMethodParser extends VoidVisitorAdapter<HashSet<String>> {
         @Override
         public void visit(MethodDeclaration n, HashSet<String> methods) {
-        	methods.add(n.getName());
+        	if (n.getModifiers()%2 != 0) { // for public methods
+        		methods.add(n.getName());
+        	}
         }
     }
 	

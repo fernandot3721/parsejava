@@ -32,7 +32,8 @@ public class Testoutput {
 		//GetJavaFiles.test();
 //		new CoreInfo().testGetFiles();
 //		new CoreInfo().parseFile("glGetTransformFeedbackVarying.java");
-		//new CoreInfo().parseFile("G:\\svn\\ucm\\9.7.0\\core");
+		CoreInfo coreInfo = new CoreInfo();
+		coreInfo.parseFile("G:\\svn\\ucm\\9.7.0\\core");
 //		new ClassParser().testParseCoreFile("SettingFlags.java");
 //
 //		PrintWriter pr = new PrintWriter("print.txt");
@@ -40,8 +41,11 @@ public class Testoutput {
 //		pr.println("shiiiit");
 //		pr.close();
 		
-		new ClassParser().parseShellFile("G:\\svn\\ucm\\9.7.0\\BrowserShell");
-		
+//		new ShellInfo().parseFile("IntentSource.java");
+//		ShellInfo shellInfo = new ShellInfo(coreInfo.getPackages(), coreInfo.getClasses(),
+		ShellInfo shellInfo = new ShellInfo(coreInfo.getPackages(), 
+				coreInfo.getInterfaces());
+		shellInfo.parseFile("G:\\svn\\ucm\\9.7.0\\BrowserShell");
     	Date end = cal.getTime();
     	System.out.println( sdf.format(start) );
     	System.out.println( sdf.format(end) );

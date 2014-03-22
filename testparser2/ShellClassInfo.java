@@ -26,4 +26,20 @@ public class ShellClassInfo extends ClassInfo {
 		this.mImportList = importList;
 		this.mCalledMethods = calledMethods;
 	}
+	
+	public HashSet<String> getImportList() {
+		return mImportList;
+	}
+	
+	public HashSet<String> getCalledMethods() {
+		return mCalledMethods;
+	}
+	
+	public void setImportListCore(HashSet<ClassInfo> importListCore) {
+		this.mImportListCore = importListCore;
+	}
+	
+	public void setCalledMethodsCore(HashSet<CoreInterfaces> calledMethodsCore) {
+		this.mCalledMethodsCore = calledMethodsCore;
+	}
 }

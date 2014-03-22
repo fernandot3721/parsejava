@@ -35,4 +35,8 @@ public class ClassInfo {
 	public String getClassFullName() {
 		return mPackage + "." + mClassName;
 	}
+	
+	public String getPackageName() {
+		return mPackage;
+	}
 }
