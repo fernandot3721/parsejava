@@ -1,12 +1,13 @@
 /**
  * 
  */
-package testparser2;
+package javaparser;
 
 /**
  * @author tangjp
  *
  */
+/*
 public class CoreInterfaces {
 
 	private final String TAG = "TJPLOG: CoreInterfaces";
@@ -28,3 +29,4 @@ public class CoreInterfaces {
 		return mBelongClass;
 	}
 }
+*/

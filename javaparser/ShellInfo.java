@@ -1,7 +1,7 @@
 /**
  * 
  */
-package testparser2;
+package javaparser;
 
 import japa.parser.ParseException;
 
@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.plaf.basic.BasicScrollPaneUI.HSBChangeListener;
@@ -43,7 +45,9 @@ public class ShellInfo {
 	/**
 	 * All core interfaces called
 	 */
-	private HashSet<CoreInterfaces> mCalledMethods;
+	private HashMap<String, ClassInfo> mCalledMethods;
+	
+	private HashSet<ShellClassInfo> mClassesImportingCore;
 	
 	// files to analyze
 	private HashSet<String> mTargetFiles;
@@ -55,8 +59,8 @@ public class ShellInfo {
 //	private HashSet<ClassInfo> mTargetClasses;
 
 	// interfaces to be test if called
-	private HashSet<CoreInterfaces> mTargetInterfaces;
-
+	private HashMap<String, ClassInfo> mTargetInterfaces;
+	
 	public void setTargetPackages(HashMap<String, ClassInfo> targetPackages) {
 		this.mTargetPackages = targetPackages;
 	}
@@ -65,19 +69,20 @@ public class ShellInfo {
 //		this.mTargetClasses = targetClasses;
 	}
 	
-	public void setTargetInterfaces(HashSet<CoreInterfaces> targetInterfaces) {
+	public void setTargetInterfaces(HashMap<String, ClassInfo> targetInterfaces) {
 		this.mTargetInterfaces = targetInterfaces;
 	}
 
 	public ShellInfo(HashMap<String, ClassInfo> targetPackages,
 //	public ShellInfo(HashSet<String> targetPackages, HashSet<ClassInfo> targetClasses,
-			HashSet<CoreInterfaces> targetInterfaces) {
+			HashMap<String, ClassInfo> targetInterfaces) {
 		this.mTargetPackages = targetPackages;
 //		this.mTargetClasses = targetClasses;
 		this.mTargetInterfaces = targetInterfaces;
 		this.mShellClasses = new HashSet<>();
 		this.mImportedClasses = new HashSet<>();
-		this.mCalledMethods = new HashSet<>();
+		this.mClassesImportingCore = new HashSet<>();
+		this.mCalledMethods = new HashMap<>();
 		this.mTargetFiles = new HashSet<>();
 	}
 
@@ -102,9 +107,6 @@ public class ShellInfo {
 		ClassParser parser = new ClassParser();
 		ShellClassInfo tmpClass = null;
 
-		CoreInterfaces tmpInter = null;
-		HashSet<String> tmpInterList = null;
-
 		// parse shell files
 		for (String file : mTargetFiles) {
 			try {
@@ -117,8 +119,10 @@ public class ShellInfo {
 			}
 			mShellClasses.add(tmpClass);
 		}
-		System.out.println("total shell files: " + mShellClasses.size());
+		System.out.println(TAG + "total shell files: " + mShellClasses.size());
 		this.scanImportedCoreClass();
+		this.scanCalledInterfaces();
+		this.test();
 	}
 	
 	private void test() {
@@ -130,8 +134,6 @@ public class ShellInfo {
 			callMethod.addAll(shellClass.getCalledMethods());
 		}
 
-		String msg = null;
-
 		PrintWriter pr = null;
 		try {
 			pr = new PrintWriter("printTool.txt");
@@ -140,19 +142,23 @@ public class ShellInfo {
 			e.printStackTrace();
 		}
 		
-		pr.println("Shell import " + importList.size() + " pacages as below: ");
+//		pr.println("Shell import " + importList.size() + " pacages as below: ");
+		/*
 		for (String im : importList) {
 			pr.println(im);
 		}
-		pr.println("Shell call " + callMethod.size() + " methods as below: ");
+		*/
+//		pr.println("Shell call " + callMethod.size() + " methods as below: ");
+		/*
 		for (String ca : callMethod) {
 			pr.println(ca);
 		}
+		*/
+		pr.close();
 
 	}
 	
 	private void scanImportedCoreClass() {
-		HashSet<ClassInfo> importedClasses = new HashSet<>();
 		HashSet<String> importList = null;
 		ClassInfo coreClass = null;
 		
@@ -163,23 +169,52 @@ public class ShellInfo {
 				if (mTargetPackages.containsKey(importName)) {
 					coreClass = mTargetPackages.get(importName);
 					mImportedClasses.add(coreClass);
-//					i++;kkkkkkk
+					mClassesImportingCore.add(shellClass);
+//					i++;
 //					System.out.println(importName);
 				}
 			}
 		}
 		
 		//test
-		System.out.println(mImportedClasses.size());
+//		System.out.println(i);
+		System.out.println(mClassesImportingCore.size() + " shell files");
+		System.out.println("import " + mImportedClasses.size() + " core files");
 	}
 	
 	private void scanCalledInterfaces() {
 		// filter out not imported classes
-		HashSet<ClassInfo> coreClasses = new HashSet<ClassInfo>();
-		for (CoreInterfaces method : mTargetInterfaces) {
-			if (mImportedClasses.contains(method.getBelongClass())) {
-				// TODO match shell call methods and targetinterfaces
+		HashMap<String, ClassInfo> importedInterfaces = new HashMap<String, ClassInfo>();
+		
+		for (Entry<String, ClassInfo> entry : mTargetInterfaces.entrySet()) {
+			if (mImportedClasses.contains(entry.getValue())) {
+				importedInterfaces.put(entry.getKey(), entry.getValue());
+			}
+			
+		}
+		
+		// match method called by shell with imported interfaces
+//		HashSet<String> callMethod = new HashSet<>();
+		HashSet<String> callMethod = null;
+		
+		for (ShellClassInfo shellClass : mClassesImportingCore) {
+//			callMethod.addAll(shellClass.getCalledMethods());
+			callMethod = shellClass.getCalledMethods();
+			for (String methodName : callMethod) {
+				if (importedInterfaces.containsKey(methodName)) {
+					mCalledMethods.put(methodName, importedInterfaces.get(methodName));
+				}
 			}
 		}
+		
+		// test
+		System.out.println(TAG + " Imported interfaces: " + importedInterfaces.size());
+		System.out.println(TAG + " Called interfaces: " + mCalledMethods.size());
+		
+		/*
+		for (Entry<String, ClassInfo> entry : mCalledMethods.entrySet()) {
+			System.out.println("Iterface <" + entry.getKey() + "> from class: " + entry.getValue().getClassFullName());
+		}
+		*/
 	}
 }

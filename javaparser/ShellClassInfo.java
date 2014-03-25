@@ -1,8 +1,9 @@
 /**
  * 
  */
-package testparser2;
+package javaparser;
 
+import java.util.HashMap;
 import java.util.HashSet;
 
 /**
@@ -17,7 +18,7 @@ public class ShellClassInfo extends ClassInfo {
 
 	// These members links to core after parse
 	private HashSet<ClassInfo> mImportListCore;
-	private HashSet<CoreInterfaces> mCalledMethodsCore;
+	private HashMap<String, ClassInfo> mCalledMethodsCore;
 
 	public ShellClassInfo(String packageName, String className,
 			HashSet<String> methods, HashSet<String> calledMethods,
@@ -37,9 +38,5 @@ public class ShellClassInfo extends ClassInfo {
 	
 	public void setImportListCore(HashSet<ClassInfo> importListCore) {
 		this.mImportListCore = importListCore;
-	}
-	
-	public void setCalledMethodsCore(HashSet<CoreInterfaces> calledMethodsCore) {
-		this.mCalledMethodsCore = calledMethodsCore;
 	}
 }

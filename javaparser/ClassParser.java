@@ -1,7 +1,7 @@
 /**
  * 
  */
-package testparser2;
+package javaparser;
 
 import japa.parser.JavaParser;
 import japa.parser.ParseException;
@@ -119,7 +119,7 @@ public class ClassParser {
     	}
     	
     	// Get Methods
-    	new GetMethodParser().visit(cu, methods);
+    	new GetPublicInterfaceParser().visit(cu, methods);
     	
     	// make core class
     	return new ClassInfo(packageName, className.str, methods);
@@ -164,7 +164,7 @@ public class ClassParser {
     	}
     }
     
-    private static class GetMethodParser extends VoidVisitorAdapter<HashSet<String>> {
+    private static class GetPublicInterfaceParser extends VoidVisitorAdapter<HashSet<String>> {
         @Override
         public void visit(MethodDeclaration n, HashSet<String> methods) {
         	if (n.getModifiers()%2 != 0) { // for public methods

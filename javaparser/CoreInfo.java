@@ -1,7 +1,7 @@
 /**
  * 
  */
-package testparser2;
+package javaparser;
 
 import japa.parser.ParseException;
 
@@ -33,7 +33,7 @@ public class CoreInfo {
 	/**
 	 * All Core Interfaces
 	 */
-	private HashSet<CoreInterfaces> mInterfaces;
+	private HashMap<String, ClassInfo> mInterfaces;
 	
 	/**
 	 * All Core packages
@@ -45,7 +45,7 @@ public class CoreInfo {
 	
 	public CoreInfo() {
 		this.mClasses = new HashSet<ClassInfo>();
-		this.mInterfaces = new HashSet<CoreInterfaces>();
+		this.mInterfaces = new HashMap<String, ClassInfo>();
 		this.mTargetFiles = new HashSet<String>();
 		this.mPackages = new HashMap<String, ClassInfo>();
 	}
@@ -54,7 +54,7 @@ public class CoreInfo {
 		return mClasses;
 	}
 
-	public HashSet<CoreInterfaces> getInterfaces() {
+	public HashMap<String, ClassInfo> getInterfaces() {
 		return mInterfaces;
 	}
 
@@ -88,8 +88,8 @@ public class CoreInfo {
 			try {
 				tmpClass = parser.parseCoreFile(file);
 			} catch (MyException e) {
-//				System.out.println(e.getMessage());
 			} catch (IOException e) {
+//				System.out.println(e.getMessage());
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
@@ -103,7 +103,6 @@ public class CoreInfo {
 	 * get all core interfaces and packages
 	 */
 	private void scanCoreInterfacesAndPackages() {
-		CoreInterfaces tmpInter = null;
 		HashSet<String> tmpInterList = null;
 		String packageName = null;
 		
@@ -111,12 +110,10 @@ public class CoreInfo {
 			// core interfaces
 			tmpInterList = coreClass.getMethods();
 			for (String method : tmpInterList) {
-				tmpInter = new CoreInterfaces(method, coreClass);
-				mInterfaces.add(tmpInter);
+				mInterfaces.put(method, coreClass);
 			}
 			
 			// core packages
-//			mPackages.add(coreClass.getPackageName());
 			mPackages.put(coreClass.getClassFullName(), coreClass);
 		}
 		this.test();
@@ -125,7 +122,7 @@ public class CoreInfo {
 //================================================================================	
 	private void test() {
 		// for test
-		String msg = null;
+//		String msg = null;
 //		
 //		PrintWriter pr = null;
 //		try {
@@ -148,9 +145,9 @@ public class CoreInfo {
 //
 //		pr.close();
 //		
-		System.out.println("total interface: " + mInterfaces.size());
-		System.out.println("total packages: " + mPackages.size());
-		System.out.println("total class: " + mClasses.size());
+		System.out.println(TAG + " total public interface: " + mInterfaces.size());
+		System.out.println(TAG + " total packages: " + mPackages.size());
+		System.out.println(TAG + " total class: " + mClasses.size());
 		
 		
 	}

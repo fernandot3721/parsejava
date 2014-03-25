@@ -1,7 +1,7 @@
 /**
  * 
  */
-package testparser2;
+package javaparser;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -46,9 +46,10 @@ public class Testoutput {
 		ShellInfo shellInfo = new ShellInfo(coreInfo.getPackages(), 
 				coreInfo.getInterfaces());
 		shellInfo.parseFile("G:\\svn\\ucm\\9.7.0\\BrowserShell");
+		cal = Calendar.getInstance();
     	Date end = cal.getTime();
-    	System.out.println( sdf.format(start) );
-    	System.out.println( sdf.format(end) );
+    	System.out.println("start: " + sdf.format(start) );
+    	System.out.println("end: " + sdf.format(end) );
 		System.out.println("end");
 	}
 
