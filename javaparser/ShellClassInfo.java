@@ -1,7 +1,7 @@
 /**
  * 
  */
-package testparser2;
+package javaparser;
 
 import java.util.HashSet;
 

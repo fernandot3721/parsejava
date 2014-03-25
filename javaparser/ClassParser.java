@@ -1,7 +1,7 @@
 /**
  * 
  */
-package testparser2;
+package javaparser;
 
 import japa.parser.JavaParser;
 import japa.parser.ParseException;
