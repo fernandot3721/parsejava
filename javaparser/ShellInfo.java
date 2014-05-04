@@ -3,31 +3,17 @@
  */
 package javaparser;
 
-import japa.parser.ParseException;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.Callable;
-
-import javax.swing.plaf.basic.BasicScrollPaneUI.HSBChangeListener;
+import java.util.Vector;
 
 /**
  * @author tangjp
  *
  */
-/**
- * @author tangjp
- *
- */
-/**
- * @author tangjp
- *
- */
+
 public class ShellInfo {
 
 	private final String TAG = "TJPLOG: ShellInfo";
@@ -37,17 +23,40 @@ public class ShellInfo {
 	 */
 	private HashSet<ShellClassInfo> mShellClasses;
 
+	
+	
 	/**
 	 * All core classes imported
+	 * CoreFilesBeingImport
 	 */
-	private HashSet<ClassInfo> mImportedClasses;
+	private HashSet<ClassInfo> mImportedClasses; 
+	
+	/**
+	 * All shell classes which import core class
+	 * ShellClassImportingCoreClass
+	 */
+	private HashSet<ShellClassInfo> mClassesImportingCore; 
 
 	/**
-	 * All core interfaces called
+	 * All core interfaces possible being imported
+	 * ImportedInterfaces
 	 */
-	private HashMap<String, ClassInfo> mCalledMethods;
+	private Vector<CoreInterfaces> mImportedInterfaces;
 	
-	private HashSet<ShellClassInfo> mClassesImportingCore;
+	/**
+	 * All core interfaces being called by shell
+	 * CalledCoreInterfaces
+	 */
+	private Vector<CoreInterfaces> mCalledMethods;
+	
+	/**
+	 * All interfaces that shell calls
+	 * ShellCallInterfaces
+	 */
+	private Vector<ShellCalledInterfaces> mShellCalls;	
+	
+	
+	
 	
 	// files to analyze
 	private HashSet<String> mTargetFiles;
@@ -55,11 +64,8 @@ public class ShellInfo {
 	// packages to be test if imported
 	private HashMap<String, ClassInfo> mTargetPackages;
 	
-	// class to be test
-//	private HashSet<ClassInfo> mTargetClasses;
-
 	// interfaces to be test if called
-	private HashMap<String, ClassInfo> mTargetInterfaces;
+	private Vector<CoreInterfaces> mTargetInterfaces;
 	
 	public void setTargetPackages(HashMap<String, ClassInfo> targetPackages) {
 		this.mTargetPackages = targetPackages;
@@ -69,21 +75,15 @@ public class ShellInfo {
 //		this.mTargetClasses = targetClasses;
 	}
 	
-	public void setTargetInterfaces(HashMap<String, ClassInfo> targetInterfaces) {
-		this.mTargetInterfaces = targetInterfaces;
-	}
-
 	public ShellInfo(HashMap<String, ClassInfo> targetPackages,
-//	public ShellInfo(HashSet<String> targetPackages, HashSet<ClassInfo> targetClasses,
-			HashMap<String, ClassInfo> targetInterfaces) {
+			Vector<CoreInterfaces> targetInterfaces) {
 		this.mTargetPackages = targetPackages;
-//		this.mTargetClasses = targetClasses;
 		this.mTargetInterfaces = targetInterfaces;
 		this.mShellClasses = new HashSet<>();
 		this.mImportedClasses = new HashSet<>();
 		this.mClassesImportingCore = new HashSet<>();
-		this.mCalledMethods = new HashMap<>();
 		this.mTargetFiles = new HashSet<>();
+		this.mImportedInterfaces = new Vector<CoreInterfaces>();
 	}
 
 	/**
@@ -119,50 +119,25 @@ public class ShellInfo {
 			}
 			mShellClasses.add(tmpClass);
 		}
-		System.out.println(TAG + "total shell files: " + mShellClasses.size());
+		
 		this.scanImportedCoreClass();
 		this.scanCalledInterfaces();
 		this.test();
 	}
 	
 	private void test() {
-		HashSet<String> importList = new HashSet<>();
-		HashSet<String> callMethod = new HashSet<>();
-				
-		for (ShellClassInfo shellClass : mShellClasses) {
-			importList.addAll(shellClass.getImportList());
-			callMethod.addAll(shellClass.getCalledMethods());
-		}
-
-		PrintWriter pr = null;
-		try {
-			pr = new PrintWriter("printTool.txt");
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		System.out.println(TAG + "total shell files: " + mShellClasses.size());
+		System.out.println(mClassesImportingCore.size() + " shell files");
+		System.out.println("import " + mImportedClasses.size() + " core files");
 		
-//		pr.println("Shell import " + importList.size() + " pacages as below: ");
-		/*
-		for (String im : importList) {
-			pr.println(im);
-		}
-		*/
-//		pr.println("Shell call " + callMethod.size() + " methods as below: ");
-		/*
-		for (String ca : callMethod) {
-			pr.println(ca);
-		}
-		*/
-		pr.close();
-
+		System.out.println(TAG + " Imported interfaces: " + mImportedClasses.size());
+		System.out.println(TAG + " Called interfaces: " + mCalledMethods.size());
 	}
 	
 	private void scanImportedCoreClass() {
 		HashSet<String> importList = null;
 		ClassInfo coreClass = null;
 		
-//		int i = 0;
 		for (ShellClassInfo shellClass : mShellClasses) {
 			importList = shellClass.getImportList();
 			for (String importName : importList) {
@@ -170,51 +145,110 @@ public class ShellInfo {
 					coreClass = mTargetPackages.get(importName);
 					mImportedClasses.add(coreClass);
 					mClassesImportingCore.add(shellClass);
-//					i++;
-//					System.out.println(importName);
 				}
 			}
 		}
 		
-		//test
-//		System.out.println(i);
-		System.out.println(mClassesImportingCore.size() + " shell files");
-		System.out.println("import " + mImportedClasses.size() + " core files");
 	}
 	
 	private void scanCalledInterfaces() {
-		// filter out not imported classes
-		HashMap<String, ClassInfo> importedInterfaces = new HashMap<String, ClassInfo>();
+//		HashSet<String> methodNames = new HashSet<>();
+//		int duplicate = 0;
+
+		ChangeChecker cc = new ChangeChecker();
 		
-		for (Entry<String, ClassInfo> entry : mTargetInterfaces.entrySet()) {
-			if (mImportedClasses.contains(entry.getValue())) {
-				importedInterfaces.put(entry.getKey(), entry.getValue());
+		// filter out not imported classes
+		// only those public interface from core whose daddy being import from shell survive
+		for (CoreInterfaces method : mTargetInterfaces) {// 40
+			if (mImportedClasses.contains(method.getBelongClass())) {
+				mImportedInterfaces.add(method);//1361
+				
+				cc.addCoreInterfaces(method);
+			}
+		}
+		
+		
+		// match method called by shell with imported interfaces
+		Vector<ShellCalledInterfaces> callMethod = null;
+		
+		for (ShellClassInfo shellClass : mClassesImportingCore) {//61
+			callMethod = shellClass.getCalledMethods();
+			for (ShellCalledInterfaces method : callMethod) { //methods in classes
+				cc.addShellCalledInterfaces(method);
 			}
 			
 		}
-		
-		// match method called by shell with imported interfaces
-//		HashSet<String> callMethod = new HashSet<>();
-		HashSet<String> callMethod = null;
-		
-		for (ShellClassInfo shellClass : mClassesImportingCore) {
-//			callMethod.addAll(shellClass.getCalledMethods());
-			callMethod = shellClass.getCalledMethods();
-			for (String methodName : callMethod) {
-				if (importedInterfaces.containsKey(methodName)) {
-					mCalledMethods.put(methodName, importedInterfaces.get(methodName));
-				}
-			}
-		}
-		
-		// test
-		System.out.println(TAG + " Imported interfaces: " + importedInterfaces.size());
-		System.out.println(TAG + " Called interfaces: " + mCalledMethods.size());
+		cc.checkCalledInterfaces();
 		
 		/*
-		for (Entry<String, ClassInfo> entry : mCalledMethods.entrySet()) {
-			System.out.println("Iterface <" + entry.getKey() + "> from class: " + entry.getValue().getClassFullName());
+		String tempStr = null;
+		for (CoreInterfaces inter : mImportedInterfaces) {// 1361
+			tempStr = inter.getName();
+			if (methodNames.contains(tempStr)) {
+				duplicate++;
+			} else {
+				methodNames.add(tempStr);
+			}
+
 		}
 		*/
+		
+		// get unique method name map
+		String tmpStr = null;
+		HashMap<String, ClassInfo> uniqInterface = new HashMap<>();
+		HashSet<String> duplicateName = new HashSet<String>();
+		for (CoreInterfaces inter : mImportedInterfaces) {
+			tmpStr = inter.getName();
+			if (uniqInterface.containsKey(tmpStr)) {
+				duplicateName.add(tmpStr);
+			} else {
+				uniqInterface.put(tmpStr, inter.getBelongClass());
+			}
+
+		}
+
+		// get duplicate methods
+		/*
+		ClassInfo tmpClass = null;
+		HashSet<CoreInterfaces> duplicateInterface = new HashSet<CoreInterfaces>();
+		for (String name : duplicateName) {
+			tmpClass = uniqInterface.remove(name);
+		}
+		*/
+		
+		mCalledMethods = cc.getCalledCoreInterfaces();
+		mShellCalls = cc.getShellCallInterfaces();
+		
+		/*
+		System.out.println(TAG + " cc core count: " + cc.getCoreCount());
+		System.out.println(TAG + " cc core called count: " + cc.getCalledCoreCount());
+		System.out.println(TAG + " cc shell count: " + cc.getShellCallCount());
+
+		System.out.println(TAG + " Called interfaces uniq set: " + methodNames.size());
+		System.out.println(TAG + " Called interfaces duplicate set: " + duplicate);
+		*/
 	}
+	
+	
+
+	public HashSet<ClassInfo> getImportedClasses() {
+		return mImportedClasses;
+	}
+
+	public HashSet<ShellClassInfo> getClassesImportingCore() {
+		return mClassesImportingCore;
+	}
+
+	public Vector<CoreInterfaces> getImportedInterfaces() {
+		return mImportedInterfaces;
+	}
+
+	public Vector<CoreInterfaces> getCalledMethods() {
+		return mCalledMethods;
+	}
+
+	public Vector<ShellCalledInterfaces> getShellCalls() {
+		return mShellCalls;
+	}
+
 }

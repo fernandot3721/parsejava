@@ -3,19 +3,10 @@
  */
 package javaparser;
 
-import japa.parser.ParseException;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
 import java.util.HashMap;
 import java.util.HashSet;
-
-import javax.swing.plaf.metal.MetalIconFactory.FileIcon16;
+import java.util.Vector;
 
 /**
  * @author tangjp
@@ -28,12 +19,12 @@ public class CoreInfo {
 	/**
 	 * All Core class info
 	 */
-	private HashSet<ClassInfo> mClasses;
+	private Vector<ClassInfo> mClasses;
 	
 	/**
 	 * All Core Interfaces
 	 */
-	private HashMap<String, ClassInfo> mInterfaces;
+	private Vector<CoreInterfaces> mInterfaces;
 	
 	/**
 	 * All Core packages
@@ -44,17 +35,17 @@ public class CoreInfo {
 	private HashSet<String> mTargetFiles;
 	
 	public CoreInfo() {
-		this.mClasses = new HashSet<ClassInfo>();
-		this.mInterfaces = new HashMap<String, ClassInfo>();
+		this.mClasses = new Vector<ClassInfo>();
+		this.mInterfaces = new Vector<CoreInterfaces>();
 		this.mTargetFiles = new HashSet<String>();
 		this.mPackages = new HashMap<String, ClassInfo>();
 	}
 
-	public HashSet<ClassInfo> getClasses() {
+	public Vector<ClassInfo> getClasses() {
 		return mClasses;
 	}
 
-	public HashMap<String, ClassInfo> getInterfaces() {
+	public Vector<CoreInterfaces> getInterfaces() {
 		return mInterfaces;
 	}
 
@@ -90,7 +81,6 @@ public class CoreInfo {
 			} catch (MyException e) {
 			} catch (IOException e) {
 //				System.out.println(e.getMessage());
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			mClasses.add(tmpClass);
@@ -103,48 +93,23 @@ public class CoreInfo {
 	 * get all core interfaces and packages
 	 */
 	private void scanCoreInterfacesAndPackages() {
-		HashSet<String> tmpInterList = null;
-		String packageName = null;
-		
 		for (ClassInfo coreClass : mClasses) {
 			// core interfaces
-			tmpInterList = coreClass.getMethods();
-			for (String method : tmpInterList) {
-				mInterfaces.put(method, coreClass);
+			
+			for (CoreInterfaces inter : coreClass.getMethods()) {
+				mInterfaces.add(inter);
 			}
 			
 			// core packages
 			mPackages.put(coreClass.getClassFullName(), coreClass);
 		}
+//		System.out.println(TAG + " total public interface(may duplicate): " + methoSet.size());
+//		System.out.println(TAG + " total duplicate: " + duplicate);
 		this.test();
 	}
 	
 //================================================================================	
 	private void test() {
-		// for test
-//		String msg = null;
-//		
-//		PrintWriter pr = null;
-//		try {
-//			pr = new PrintWriter("print.txt");
-//		} catch (FileNotFoundException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		
-//		for (CoreInterfaces method : mInterfaces) {
-//			msg = "Method: " + method.getName() + " Class: " + method.getBelongClass().getClassFullName();
-//			System.out.println(msg);
-//			pr.println(msg);
-//			System.out.println(msg);
-//		}
-//		for (String pa : mPackages) {
-//			msg = "Package: " + pa;
-//			pr.println(msg);
-//		}
-//
-//		pr.close();
-//		
 		System.out.println(TAG + " total public interface: " + mInterfaces.size());
 		System.out.println(TAG + " total packages: " + mPackages.size());
 		System.out.println(TAG + " total class: " + mClasses.size());

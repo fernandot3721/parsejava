@@ -3,33 +3,41 @@
  */
 package javaparser;
 
-import java.util.HashSet;
+import java.io.Serializable;
+import java.util.Vector;
 
 /**
  * @author tangjp
  *
  */
-public class ClassInfo {
+public class ClassInfo implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
 	private final String TAG = "TJPLOG: ClassInfo";
 	private String mPackage;
 	private String mClassName;
 
-	private HashSet<String> mMethods;
+	private Vector<CoreInterfaces> mMethods;
 	
-	public HashSet<String> getMethods() {
+	public Vector<CoreInterfaces> getMethods() {
 		return mMethods;
 	}
 
 	public ClassInfo(String mPackage, String mClassName,
-			HashSet<String> mMethods) {
+			Vector<CoreInterfaces> mMethods) {
 		super();
 		this.mPackage = mPackage;
 		this.mClassName = mClassName;
 		this.mMethods = mMethods;
-	}
-
-	public void addMethod(String methodName) {
-		this.mMethods.add(methodName);
+		
+		if (null != mMethods) {
+			for (CoreInterfaces inter : mMethods) {
+				inter.setBelongClass(this);
+			}
+		}
 	}
 	
 	public String getClassFullName() {
@@ -39,4 +47,33 @@ public class ClassInfo {
 	public String getPackageName() {
 		return mPackage;
 	}
+	
+	public String getClassName() {
+		return mClassName;
+	}
+
+	@Override
+	public boolean equals(Object arg0) {
+		ClassInfo target = (ClassInfo) arg0;
+		if (null != mClassName && !this.mClassName.equals(target.getClassName())) {
+			System.out.println(mClassName);
+			System.out.println(target.getClassName());
+			return false;
+		}
+		if (null != mPackage && !this.mPackage.equals(target.getPackageName())) {
+			System.out.println(mPackage);
+			System.out.println(target.getPackageName());
+			return false;
+		}
+		return true;
+	}
+	
+    @Override
+    public int hashCode() {
+    	int result = 17;
+    	result = 31 * result + ((null == mPackage) ? 0 : mPackage.hashCode() )
+    			+ ((null == mClassName) ? 0 : mClassName.hashCode());
+    	return result;
+    }
+		
 }

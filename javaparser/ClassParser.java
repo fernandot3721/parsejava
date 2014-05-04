@@ -7,30 +7,17 @@ import japa.parser.JavaParser;
 import japa.parser.ParseException;
 import japa.parser.ast.CompilationUnit;
 import japa.parser.ast.ImportDeclaration;
-import japa.parser.ast.PackageDeclaration;
-import japa.parser.ast.body.AnnotationDeclaration;
-import japa.parser.ast.body.AnnotationMemberDeclaration;
-import japa.parser.ast.body.BodyDeclaration;
 import japa.parser.ast.body.ClassOrInterfaceDeclaration;
-import japa.parser.ast.body.ConstructorDeclaration;
-import japa.parser.ast.body.EmptyMemberDeclaration;
-import japa.parser.ast.body.EnumConstantDeclaration;
-import japa.parser.ast.body.EnumDeclaration;
-import japa.parser.ast.body.FieldDeclaration;
-import japa.parser.ast.body.InitializerDeclaration;
 import japa.parser.ast.body.MethodDeclaration;
 import japa.parser.ast.body.Parameter;
-import japa.parser.ast.body.TypeDeclaration;
 import japa.parser.ast.expr.MethodCallExpr;
 import japa.parser.ast.visitor.VoidVisitorAdapter;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Vector;
 
 
 /**
@@ -54,7 +41,7 @@ public class ClassParser {
     	// Three element to build up a shell class info
 		String packageName = null;
     	AString className = new AString();
-    	HashSet<String> calledMethods = new HashSet<>();
+    	Vector<ShellCalledInterfaces> calledMethods = new Vector<>();
     	HashSet<String> importList = new HashSet<>();
 
     	cu = getCompilcationUnit(fileName);
@@ -86,7 +73,7 @@ public class ClassParser {
     	// Get called Methods
     	cu.accept(new GetCalledMethodParser(), calledMethods);
     	
-    	shellClass = new ShellClassInfo(packageName, className.str, null, calledMethods, importList);
+    	shellClass = new ShellClassInfo(packageName, className.str, calledMethods, importList);
 		
 		return shellClass;
 	}
@@ -104,7 +91,7 @@ public class ClassParser {
     	// Three element to build up a core class info
     	String packageName = null;
     	AString className = new AString();
-    	HashSet<String> methods = new HashSet<>();
+    	Vector<CoreInterfaces> methods = new Vector<>();
     	
     	cu = getCompilcationUnit(fileName);
     	
@@ -164,128 +151,37 @@ public class ClassParser {
     	}
     }
     
-    private static class GetPublicInterfaceParser extends VoidVisitorAdapter<HashSet<String>> {
+    private static class GetPublicInterfaceParser extends VoidVisitorAdapter<Vector<CoreInterfaces>> {
         @Override
-        public void visit(MethodDeclaration n, HashSet<String> methods) {
+        public void visit(MethodDeclaration n, Vector<CoreInterfaces> methods) {
+        	List<Parameter> params = null;
+        	CoreInterfaces publicMethod = null;
+        	Vector<String> paramList = null;
         	if (n.getModifiers()%2 != 0) { // for public methods
-        		methods.add(n.getName());
+//        		System.out.println("method name: " + n.getName());
+        		params = n.getParameters();
+				if (null != params) {
+					paramList = new Vector<String>();
+					for (Parameter tmpParam : params) {
+						paramList.add(tmpParam.getType().toString());
+					}
+//					System.out.println("params: " + paramList.size());
+        		}
+        		publicMethod = new CoreInterfaces(n.getName(), null, paramList);
+        		methods.add(publicMethod);
         	}
         }
     }
 	
-    private static class GetCalledMethodParser extends VoidVisitorAdapter<HashSet<String>> {
+    private static class GetCalledMethodParser extends VoidVisitorAdapter<Vector<ShellCalledInterfaces>> {
     	@Override
-    	public void visit(MethodCallExpr n, HashSet<String> calledMethods) {
-    		//
-//    		System.out.println(n.getBeginLine() + " to " + n.getEndLine() + " : " + n.getName());
-    		calledMethods.add(n.getName());
+    	public void visit(MethodCallExpr n, Vector<ShellCalledInterfaces> calledMethods) {
+    		int paramCount = 0;
+    		if (null != n.getArgs()) {
+    			paramCount = n.getArgs().size();
+    		}
+    		calledMethods.add(new ShellCalledInterfaces(n.getName(), null, paramCount));
     	}
     }
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-//================================================================================    
-    /**
-     * Simple visitor implementation for visiting MethodDeclaration nodes. 
-     */
-    private static class MethodVisitor extends VoidVisitorAdapter<Integer> {
-    	private static int cout = 0;
-
-        @Override
-        public void visit(MethodDeclaration n, Integer c) {
-            // here you can access the attributes of the method.
-            // this method will be called for all methods in this 
-            // CompilationUnit, including inner class methods
-            System.out.println(n.getBeginLine() + ": " + n.getName());
-            cout++;
-            System.out.println("total count: " + cout);
-        	n.getName();
-        }
-    }
-    
-    private static class ClassOrInterfaceVistitor extends VoidVisitorAdapter {
-    	public void visit(ClassOrInterfaceDeclaration n, Object arg) {
-            System.out.println(n.getName());
-            List<BodyDeclaration> members = new LinkedList<BodyDeclaration>();
-            members = n.getMembers();
-            int i = 0;
-    	}
-    }
-    private static class ConstructorVistitor extends VoidVisitorAdapter {
-    	public void visit(ConstructorDeclaration n, Object arg) {
-//            System.out.println(n.getBeginLine() + ": " + n.getName());
-    	}
-    }
-    private static class EmptyMemberVistitor extends VoidVisitorAdapter {
-    	public void visit(EmptyMemberDeclaration n, Object arg) {
-//            System.out.println(n.getBeginLine() + ": " +  n.toString());
-    	}
-    }
-
-    private static class FieldVistitor extends VoidVisitorAdapter {
-    	public void visit(FieldDeclaration n, Object arg) {
-//            System.out.println(n.getBeginLine() + ": " +  n.toString());
-    	}
-    }
-    
-    
-    public void testParseCoreFile(String fileName) {
-    	HashSet<String> calledMethods = new HashSet<>();
-    	CompilationUnit cu = null;
-    	try {
-    		cu = getCompilcationUnit(fileName);
-    	} catch (Exception e) {
-    		// TODO Auto-generated catch block
-    		e.printStackTrace();
-    	}
-    	
-    	cu.accept(new GetCalledMethodParser(), calledMethods);
-    	
-//    	int i = 0;
-//    	for (String tmp : calledMethods) {
-//    		System.out.println(tmp);
-//    		i++;
-//    	}
-//    	System.out.println("total: " + i);
-
-    	List<ImportDeclaration> imports = new LinkedList<ImportDeclaration>();
-    	imports = cu.getImports();
-    	String strTmp = null;
-    	for (ImportDeclaration tmp : imports) {
-    		strTmp = tmp.getName().toString();
-    		System.out.println(strTmp);
-    	}
-    	//String importPacks = cu.getImports().toString();
-    	//System.out.println(importPacks);
-
-//    	cu.accept(new VoidVisitorAdapter<HashSet<String>>() {
-//    		@Override
-//    		public void visit(MethodCallExpr n, HashSet<String> calledMethods) {
-//    			//
-//    			System.out.println(n);
-//    		}
-//    	} ,  calledMethods);
-//
-//    	String className = null;
-//    	String packageName = cu.getPackage().getName().toString();
-//    	String importPacks = cu.getImports().toString();
-//    	
-//    	
-//    	int c =0;
-//    	new MethodVisitor().visit(cu, c);
-//    	new ClassOrInterfaceVistitor().visit(cu, null);
-//    	new ConstructorVistitor().visit(cu, null);
-//    	new EmptyMemberVistitor().visit(cu, null);
-//    	new FieldVistitor().visit(cu, null);
-    	return;
-    	
-    }
-//================================================================================    
 }

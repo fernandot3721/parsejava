@@ -3,40 +3,84 @@
  */
 package javaparser;
 
-import java.util.HashMap;
+import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Vector;
 
 /**
  * @author tangjp
  *
  */
-public class ShellClassInfo extends ClassInfo {
+public class ShellClassInfo implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	private final String TAG = "TJPLOG: ShellClassInfo";
+
+	private String mPackage;
+	private String mClassName;
+	
 	private HashSet<String> mImportList;
-	private HashSet<String> mCalledMethods;
+	private Vector<ShellCalledInterfaces> mCalledMethods;
 
 	// These members links to core after parse
-	private HashSet<ClassInfo> mImportListCore;
-	private HashMap<String, ClassInfo> mCalledMethodsCore;
 
 	public ShellClassInfo(String packageName, String className,
-			HashSet<String> methods, HashSet<String> calledMethods,
-			HashSet<String> importList) {
-		super(packageName, className, methods);
+			Vector<ShellCalledInterfaces> calledMethods,	HashSet<String> importList) {
+		
+		this.mPackage = packageName;
+		this.mClassName = className;
 		this.mImportList = importList;
 		this.mCalledMethods = calledMethods;
+		
+		if (null != mCalledMethods) {
+			for (ShellCalledInterfaces call : mCalledMethods) {
+				call.setBelongClass(this);
+			}
+		}
 	}
 	
 	public HashSet<String> getImportList() {
 		return mImportList;
 	}
 	
-	public HashSet<String> getCalledMethods() {
+	public Vector<ShellCalledInterfaces> getCalledMethods() {
 		return mCalledMethods;
 	}
 	
-	public void setImportListCore(HashSet<ClassInfo> importListCore) {
-		this.mImportListCore = importListCore;
+	public String getClassFullName() {
+		return mPackage + "." + mClassName;
 	}
+	
+	public String getClassName() {
+		return mClassName;
+	}
+	
+	public String getPackageName() {
+		return mPackage;
+	}
+	
+	@Override
+	public boolean equals(Object arg0) {
+		ShellClassInfo target = (ShellClassInfo) arg0;
+		if (null != mClassName && !this.mClassName.equals(target.getClassName())) {
+			return false;
+		}
+		if (null != mPackage && !this.mPackage.equals(target.getPackageName())) {
+			return false;
+		}
+		return true;
+	}
+	
+    @Override
+    public int hashCode() {
+    	int result = 17;
+    	result = 31 * result + ((mPackage == null) ? 0 : mPackage.hashCode())
+    			+ ((mClassName == null) ? 0 : mClassName.hashCode());
+    	return result;
+    }
+    
 }
