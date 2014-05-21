@@ -3,7 +3,11 @@
  */
 package javaparser;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Vector;
@@ -32,12 +36,12 @@ public class CoreInfo {
 	private HashMap<String, ClassInfo> mPackages;
 
 	// files to analyze
-	private HashSet<String> mTargetFiles;
+	private Vector<String> mTargetFiles;
 	
 	public CoreInfo() {
 		this.mClasses = new Vector<ClassInfo>();
 		this.mInterfaces = new Vector<CoreInterfaces>();
-		this.mTargetFiles = new HashSet<String>();
+		this.mTargetFiles = new Vector<String>();
 		this.mPackages = new HashMap<String, ClassInfo>();
 	}
 
@@ -60,7 +64,8 @@ public class CoreInfo {
 		GetJavaFiles getter = new GetJavaFiles(mTargetFiles);
 		try {
 			getter.getFiles(path);
-		} catch (MyException e) {
+		} catch (MyFatalException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -78,15 +83,23 @@ public class CoreInfo {
 		for (String file : mTargetFiles) {
 			try {
 				tmpClass = parser.parseCoreFile(file);
+				mClasses.add(tmpClass);
 			} catch (MyException e) {
+//				e.printStackTrace();
+//				System.out.println(e.getMessage());
 			} catch (IOException e) {
 //				System.out.println(e.getMessage());
 				e.printStackTrace();
+			} catch (MyFatalException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			mClasses.add(tmpClass);
 		}
-		
+		if (Testoutput.LOG) {
+			System.out.println("#######core files: " + mTargetFiles.size());
+		}
 		this.scanCoreInterfacesAndPackages();
+
 	}
 	
 	/**
@@ -105,7 +118,9 @@ public class CoreInfo {
 		}
 //		System.out.println(TAG + " total public interface(may duplicate): " + methoSet.size());
 //		System.out.println(TAG + " total duplicate: " + duplicate);
-		this.test();
+		if (Testoutput.LOG) {
+			this.test();
+		}
 	}
 	
 //================================================================================	
@@ -113,8 +128,27 @@ public class CoreInfo {
 		System.out.println(TAG + " total public interface: " + mInterfaces.size());
 		System.out.println(TAG + " total packages: " + mPackages.size());
 		System.out.println(TAG + " total class: " + mClasses.size());
+		/*
+		PrintWriter pr = null;
+		try {
+			pr = new PrintWriter("coreclassinfo.txt");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		for (ClassInfo cl : mClasses) {
+			pr.println(cl.getClassName()+"####"+cl.getPackageName());
+		}
+		pr.close();
 		
 		
+		FileOutputStream fos = new FileOutputStream(name+".dat");
+        ObjectOutputStream oos = new ObjectOutputStream(fos);
+
+        oos.writeObject(classes);
+		oos.close();
+		*/
 	}
 
 	// test code

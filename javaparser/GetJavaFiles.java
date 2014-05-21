@@ -3,6 +3,7 @@ package javaparser;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.HashSet;
+import java.util.Vector;
 
 /**
  * @author tangjp
@@ -12,18 +13,18 @@ public class GetJavaFiles {
 
 	private final String TAG = "TJPLOG: GetJavaFiles";
 	private JavatFilter mFilter;
-	private HashSet<String> mTargetFiles;
+	private Vector<String> mTargetFiles;
 
-	public GetJavaFiles(HashSet<String> mTargetFiles) {
+	public GetJavaFiles(Vector<String> mTargetFiles) {
 		this.mTargetFiles = mTargetFiles;
 		this.mFilter = new JavatFilter();
 	}
 
 	/**
 	 * Read from input dir and get all java files out
-	 * @throws MyException given paths contain no files
+	 * @throws MyFatalException given paths contain no files
 	 */
-	public void getFiles(String path) throws MyException {
+	public void getFiles(String path) throws MyFatalException {
 		File dir = new File(path);
 		
 		// For files, add to mTargetFiles
@@ -35,7 +36,7 @@ public class GetJavaFiles {
 		File[] files = dir.listFiles(mFilter);
 		
 		if (null == files) {
-			throw new MyException(TAG + "Given path: " + path + "contains no files");
+			throw new MyFatalException(TAG + "Given path: " + path + "contains no files");
 		}
 		
 		// For directoris, search recursively
@@ -49,7 +50,7 @@ public class GetJavaFiles {
 	}
 	
 	public static void test() {
-		HashSet<String> target = new HashSet<String>();
+		Vector<String> target = new Vector<String>();
 		GetJavaFiles getter = new GetJavaFiles(target);
 		try {
 //			this.getFiles("J:\\model");
@@ -57,7 +58,7 @@ public class GetJavaFiles {
 			getter.getFiles("G:\\svn\\ucm\\9.7.0\\core");
 			System.out.println(target.toString());
 			System.out.println(target.size());
-		} catch (MyException e) {
+		} catch (MyFatalException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

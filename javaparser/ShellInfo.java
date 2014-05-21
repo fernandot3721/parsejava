@@ -7,6 +7,7 @@ package javaparser;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.TreeSet;
 import java.util.Vector;
 
 /**
@@ -21,7 +22,7 @@ public class ShellInfo {
 	/**
 	 * All shell classes
 	 */
-	private HashSet<ShellClassInfo> mShellClasses;
+	private TreeSet<ShellClassInfo> mShellClasses;
 
 	
 	
@@ -29,13 +30,13 @@ public class ShellInfo {
 	 * All core classes imported
 	 * CoreFilesBeingImport
 	 */
-	private HashSet<ClassInfo> mImportedClasses; 
+	private TreeSet<ClassInfo> mImportedClasses; 
 	
 	/**
 	 * All shell classes which import core class
 	 * ShellClassImportingCoreClass
 	 */
-	private HashSet<ShellClassInfo> mClassesImportingCore; 
+	private TreeSet<ShellClassInfo> mClassesImportingCore; 
 
 	/**
 	 * All core interfaces possible being imported
@@ -59,7 +60,7 @@ public class ShellInfo {
 	
 	
 	// files to analyze
-	private HashSet<String> mTargetFiles;
+	private Vector<String> mTargetFiles;
 
 	// packages to be test if imported
 	private HashMap<String, ClassInfo> mTargetPackages;
@@ -79,10 +80,10 @@ public class ShellInfo {
 			Vector<CoreInterfaces> targetInterfaces) {
 		this.mTargetPackages = targetPackages;
 		this.mTargetInterfaces = targetInterfaces;
-		this.mShellClasses = new HashSet<>();
-		this.mImportedClasses = new HashSet<>();
-		this.mClassesImportingCore = new HashSet<>();
-		this.mTargetFiles = new HashSet<>();
+		this.mShellClasses = new TreeSet<>();
+		this.mImportedClasses = new TreeSet<>();
+		this.mClassesImportingCore = new TreeSet<>();
+		this.mTargetFiles = new Vector<>();
 		this.mImportedInterfaces = new Vector<CoreInterfaces>();
 	}
 
@@ -93,7 +94,7 @@ public class ShellInfo {
 		GetJavaFiles getter = new GetJavaFiles(mTargetFiles);
 		try {
 			getter.getFiles(path);
-		} catch (MyException e) {
+		} catch (MyFatalException e) {
 			e.printStackTrace();
 		}
 	}
@@ -111,27 +112,34 @@ public class ShellInfo {
 		for (String file : mTargetFiles) {
 			try {
 				tmpClass = parser.parseShellFile(file);
+				mShellClasses.add(tmpClass);
 			} catch (MyException e) {
 //				System.out.println(e.getMessage());
+				//e.printStackTrace();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			} catch (MyFatalException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			mShellClasses.add(tmpClass);
 		}
 		
 		this.scanImportedCoreClass();
 		this.scanCalledInterfaces();
-		this.test();
+		if (Testoutput.LOG) {
+			System.out.println("######shell files:"+mTargetFiles.size());
+			this.test();
+		}
 	}
 	
 	private void test() {
-		System.out.println(TAG + "total shell files: " + mShellClasses.size());
-		System.out.println(mClassesImportingCore.size() + " shell files");
-		System.out.println("import " + mImportedClasses.size() + " core files");
+		System.out.println(TAG + "total shell classes: " + mShellClasses.size());
+		//System.out.println(mClassesImportingCore.size() + " shell files");
+		//System.out.println("import " + mImportedClasses.size() + " core files");
 		
-		System.out.println(TAG + " Imported interfaces: " + mImportedClasses.size());
-		System.out.println(TAG + " Called interfaces: " + mCalledMethods.size());
+		//System.out.println(TAG + " Imported classes: " + mImportedClasses.size());
+		//System.out.println(TAG + " Called interfaces: " + mCalledMethods.size());
 	}
 	
 	private void scanImportedCoreClass() {
@@ -231,11 +239,11 @@ public class ShellInfo {
 	
 	
 
-	public HashSet<ClassInfo> getImportedClasses() {
+	public TreeSet<ClassInfo> getImportedClasses() {
 		return mImportedClasses;
 	}
 
-	public HashSet<ShellClassInfo> getClassesImportingCore() {
+	public TreeSet<ShellClassInfo> getClassesImportingCore() {
 		return mClassesImportingCore;
 	}
 

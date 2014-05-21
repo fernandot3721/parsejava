@@ -11,7 +11,7 @@ import java.util.Vector;
  * @author tangjp
  *
  */
-public class ShellClassInfo implements Serializable{
+public class ShellClassInfo implements Serializable, Comparable<ShellClassInfo>{
 
 	/**
 	 * 
@@ -82,5 +82,13 @@ public class ShellClassInfo implements Serializable{
     			+ ((mClassName == null) ? 0 : mClassName.hashCode());
     	return result;
     }
+
+	@Override
+	public int compareTo(ShellClassInfo o) {
+		if (null != mClassName) {
+			return this.mClassName.compareTo(o.getClassName());
+		}
+		return 0;
+	}
     
 }

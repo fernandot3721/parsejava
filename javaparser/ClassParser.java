@@ -33,8 +33,9 @@ public class ClassParser {
 	 * @return A shell class object
 	 * @throws MyException
 	 * @throws IOException
+	 * @throws MyFatalException 
 	 */
-	public ShellClassInfo parseShellFile(String fileName) throws MyException, IOException {
+	public ShellClassInfo parseShellFile(String fileName) throws MyException, IOException, MyFatalException {
 		ShellClassInfo shellClass = null;
     	CompilationUnit cu = null;
     	
@@ -84,8 +85,9 @@ public class ClassParser {
      * @return A core class object
      * @throws IOException
      * @throws MyException
+     * @throws MyFatalException 
      */
-    public ClassInfo parseCoreFile(String fileName) throws IOException, MyException {
+    public ClassInfo parseCoreFile(String fileName) throws IOException, MyException, MyFatalException {
     	CompilationUnit cu = null;
     	
     	// Three element to build up a core class info
@@ -97,6 +99,12 @@ public class ClassParser {
     	
     	// Get Class Name
     	new GetNameParser().visit(cu, className);
+    	
+    	// CHECK VALID POINT
+    	if (null == className.str) {
+    		//System.out.println(TAG + " class name null! check " + fileName);
+    		throw new MyException(TAG + "parse file: " + fileName + " class Name null!");
+    	}
 
     	// Get Packages
     	if (null != cu.getPackage()) {

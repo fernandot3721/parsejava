@@ -10,7 +10,7 @@ import java.util.Vector;
  * @author tangjp
  *
  */
-public class ClassInfo implements Serializable {
+public class ClassInfo implements Serializable, Comparable<ClassInfo> {
 	/**
 	 * 
 	 */
@@ -56,13 +56,13 @@ public class ClassInfo implements Serializable {
 	public boolean equals(Object arg0) {
 		ClassInfo target = (ClassInfo) arg0;
 		if (null != mClassName && !this.mClassName.equals(target.getClassName())) {
-			System.out.println(mClassName);
-			System.out.println(target.getClassName());
+//			System.out.println(mClassName);
+//			System.out.println(target.getClassName());
 			return false;
 		}
 		if (null != mPackage && !this.mPackage.equals(target.getPackageName())) {
-			System.out.println(mPackage);
-			System.out.println(target.getPackageName());
+//			System.out.println(mPackage);
+//			System.out.println(target.getPackageName());
 			return false;
 		}
 		return true;
@@ -75,5 +75,13 @@ public class ClassInfo implements Serializable {
     			+ ((null == mClassName) ? 0 : mClassName.hashCode());
     	return result;
     }
+
+	@Override
+	public int compareTo(ClassInfo o) {
+		if (null != mClassName) {
+			return this.mClassName.compareTo(o.getClassName());
+		}
+		return 0;
+	}
 		
 }
