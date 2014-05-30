@@ -18,33 +18,67 @@ import java.util.Vector;
 
 /**
  * @author tangjp
+ * 1. 接受buildbot调用
+ * 2. 传入参数：basename, shellpath, corepath, checkname, checkshellpath, checkcorepath, logdown
+ * 		basename 对比的基准的标识，用于建立目录（将来可能用于checout代码）
+ * 		shellpath	对比基准的外壳路径，用于扫描
+ * 		corepath	对比基准的外壳路径，用于扫描
+ * 		checkname	检查目标的标识， 用于建立目录（将来可能用于checout代码）
+ * 		checkshellpath 检查目标的外壳路径，用于扫描
+ * 		checkcorepath 检查目标的外壳路径，用于扫描
+ * 		logdown 是否记录下原始类，否则只记录文本结果
+ * 
+ * 
+ * currentpath|--base|--interfaces.dat
+ * 								 |--base.txt
+ *   			  		    	 |--core.dat
+ *					  |--last|--result.txt
+ *   			  		   	    |--interfaces.dat
+ *   			  		   	    |--core.dat
+ * 					  |--r1234|--result.txt
+ * 								    |--interfaces.dat
+ * 	
+ * 
+ * 2. 传入参数：basecodepath, codepath, tagname
+ * 
+ * 3. 准备：根据tagname计算运行路径，检查路径是否存在，不存在则新建
+ * 4. 基准处理：检查运行路径下base目录，base.txt信息是否与参数basecodepath一致，是否存在dat文件，否则扫描basecode
+ * 5. 扫描新代码：扫描codepath代码，生产dat文件
+ * 5. 对比last：将新的dat文件与旧的dat文件进行对比，
+ * 		core: 有新增或者减少的core则加入负责人记录（BCPI.txt）
+ * 		shell: 有新增调用或减少调用的接口则记录（BCI.txt），对比core负责人列表，分类是否需要即使更改并发出警告
+ * 6. 对比base：将新的dat文件与旧的dat文件进行对比，有新增或者减少的接口则记录（BCPI.txt），有新增调用或减少调用的接口则记录（BCI.txt）
+ * 	
  *
  */
-public class Testoutput {
+public class CheckInterface {
 
 	public static boolean LOG = false;
-//	private static String VERSION = "970_";
 	private static String VERSION = "97r_";
-//	private static String VERSION = "978_";
-//	private static String VERSION = "980_";
 	private static String OLD_VERSION = "970_";
-//	private static String OLD_VERSION = "97r_";
 	private static boolean COMPARE = true;
-//	private static final String version = "97r_";
-//	private static final String version = "978_";
 //	private static String COREPATH = "G:\\svn\\ucm\\9.7.0\\core";
 	private static String COREPATH = "G:\\svn\\ucm\\9.7-release\\core";
 //	private static String COREPATH = "G:\\svn\\ucm\\9.7.8\\core";
-//	private static String COREPATH = "G:\\svn\\ucm\\9.8.0\\core";
 //	private static String SHELLPATH = "G:\\svn\\ucm\\9.7.0\\BrowserShell";
 	private static String SHELLPATH = "G:\\svn\\ucm\\9.7-release\\BrowserShell";
 //	private static String SHELLPATH = "G:\\svn\\ucm\\9.7.8\\BrowserShell";
-//	private static String SHELLPATH = "G:\\svn\\ucm\\9.8.0\\BrowserShell";
 	private static final String COREFILEBEINGIMPORTED = "CoreFilesBeingImported";
 	private static final String SHELLCLASSIMPORTINGCORECLASS = "ShellClassImportingCoreClass";
 	private static final String IMPORTEDINTERFACE = "ImportedInterface";
 	private static final String CALLEDCOREINTERFACES = "CalledCoreInterfaces";
 	private static final String SHELLCALLINTERFACE = "ShellCallInterface";
+	
+	
+	private static final String BASE_PATH = "J:\\workspace\\InterfaceChecker";
+	
+	private static String tag_name = null;
+	private static String base_name = null;
+	private static String tag_shell_path = null;
+	private static String tag_core_path = null;
+	private static String base_shell_path = null;
+	private static String base_core_path = null;
+			
 	
 	/**
 	 * @param args
@@ -73,12 +107,12 @@ public class Testoutput {
 	    	printShellCalledInterface(VERSION + SHELLCALLINTERFACE, shellInfo.getShellCalls());
     	} else {
     	
-	    	checkClassInfo(OLD_VERSION + COREFILEBEINGIMPORTED, shellInfo.getImportedClasses());
-	    	checkShellClassInfo(OLD_VERSION + SHELLCLASSIMPORTINGCORECLASS, shellInfo.getClassesImportingCore());
+//	    	checkClassInfo(OLD_VERSION + COREFILEBEINGIMPORTED, shellInfo.getImportedClasses());
+//	    	checkShellClassInfo(OLD_VERSION + SHELLCLASSIMPORTINGCORECLASS, shellInfo.getClassesImportingCore());
 	    	
-	    	checkCoreInterface(OLD_VERSION + IMPORTEDINTERFACE, shellInfo.getImportedInterfaces());
+//	    	checkCoreInterface(OLD_VERSION + IMPORTEDINTERFACE, shellInfo.getImportedInterfaces());
 	    	checkCoreInterface(OLD_VERSION + CALLEDCOREINTERFACES, shellInfo.getCalledMethods());
-	    	checkShellCalledInterface(OLD_VERSION + SHELLCALLINTERFACE, shellInfo.getShellCalls());
+//	    	checkShellCalledInterface(OLD_VERSION + SHELLCALLINTERFACE, shellInfo.getShellCalls());
     	}
     	
     	cal = Calendar.getInstance();
@@ -86,71 +120,6 @@ public class Testoutput {
     	System.out.println("start: " + sdf.format(start) );
     	System.out.println("end: " + sdf.format(end) );
     	System.out.println("end");
-    	
-    	
-    	
-    	
-    	
-    	
-    	
-    	
-    	
-    	
-		//new MethodPrinter().printMethod();
-		//GetJavaFiles.test();
-//		new CoreInfo().testGetFiles();
-//		new CoreInfo().parseFile("glGetTransformFeedbackVarying.java");
-//		new ClassParser().testParseCoreFile("SettingFlags.java");
-//
-//		PrintWriter pr = new PrintWriter("print.txt");
-//		pr.println("shit");
-//		pr.println("shiiiit");
-//		pr.close();
-		
-//		new ShellInfo().parseFile("IntentSource.java");
-//		ShellInfo shellInfo = new ShellInfo(coreInfo.getPackages(), coreInfo.getClasses(),
-
-    	
-		/*
-		HashSet<ClassInfo> a = new HashSet<>();
-		HashSet<ClassInfo> b = new HashSet<>();
-		for (int i=1;i<20;i++) {
-			a.add(new ClassInfo("a", String.valueOf(i), null));
-			b.add(new ClassInfo("a", String.valueOf(i), null));
-		}
-		System.out.println(a.equals(b));
-		
-		HashSet<ShellClassInfo> c = new HashSet<>();
-		HashSet<ShellClassInfo> d = new HashSet<>();
-		for (int i=1;i<20;i++) {
-			c.add(new ShellClassInfo("a", String.valueOf(i), null, null));
-			d.add(new ShellClassInfo("a", String.valueOf(i), null, null));
-		}
-		System.out.println(a.equals(b));
-		/*
-		
-    	/*
-    	LinkedList<String> testList1 = new LinkedList<>();
-    	testList1.add("a");
-    	testList1.add("b");
-    	testList1.add("c");
-    	
-			
-    	LinkedList<String> testList2 = new LinkedList<>();
-    	testList2.add("a");
-    	testList2.add("b");
-    	testList2.add("c");
-    	
-    	if (testList1.equals(testList2)) {
-//   		if (testList1.containsAll(testList2) && testList2.containsAll(testList1)) {
-//  		if (testList2.containsAll(testList1)) {
-//  		if (testList1.containsAll(testList2)) {
-    		System.out.println("success");
-    	} else {
-    		System.out.println("failed");
-    	}
-    	*/
-		
 	}
 	
 	private static void printClassInfo(String name, TreeSet<ClassInfo> classes) throws Exception{
@@ -173,7 +142,7 @@ public class Testoutput {
         oos.writeObject(classes);
 		oos.close();
 		
-		if (Testoutput.LOG) {
+		if (CheckInterface.LOG) {
 			System.out.println(name + ": " + classes.size());
 		}
 	}
@@ -198,7 +167,7 @@ public class Testoutput {
         oos.writeObject(classes);
 		oos.close();
 		
-		if (Testoutput.LOG) {
+		if (CheckInterface.LOG) {
 			System.out.println(name + ": " + classes.size());
 		}
 	}
@@ -225,7 +194,7 @@ public class Testoutput {
         oos.writeObject(inters);
 		oos.close();
 		
-		if (Testoutput.LOG) {
+		if (CheckInterface.LOG) {
 			System.out.println(name + ": " + inters.size());
 		}
 	}
@@ -252,7 +221,7 @@ public class Testoutput {
         oos.writeObject(inters);
 		oos.close();
 		
-		if (Testoutput.LOG) {
+		if (CheckInterface.LOG) {
 			System.out.println(name + ": " + inters.size());
 		}
 	}
